@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+           
+<!--
+ * For iCal, start off by opening a calendar at
+ *
+ * http://localhost:8080/users/userA/  - iCal will discover the calendar inside
+ * that user.
+ *
+ * For Mozilla clients (eg thunderbird) connect directory to the calendar url, eg
+ *
+ * http://localhost:8080/users/userA/calendars/cal1/
+ -->
+
+	<bean id="caldav.demo.resource.factory" class="com.ettrema.http.caldav.demo.TResourceFactory"/>
+	
+	<bean id="wellknown.resource.factory" class="com.bradmcevoy.http.WellKnownResourceFactory">
+		<constructor-arg ref="caldav.demo.resource.factory"/>
+		<constructor-arg>
+			<list>
+				<ref local="protocol.caldav"/>
+				<ref local="protocol.carddav"/>
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="resource.type.helper.default" class="com.bradmcevoy.http.webdav.WebDavResourceTypeHelper"/>
+
+	<bean id="resource.type.helper.acl" class="com.ettrema.http.acl.AccessControlledResourceTypeHelper">
+		<constructor-arg ref="resource.type.helper.default"/>
+	</bean>
+
+	<bean id="resource.type.helper.caldav" class="com.ettrema.http.caldav.CalendarResourceTypeHelper">
+		<constructor-arg ref="resource.type.helper.acl"/>
+	</bean>        
+
+	<bean id="resource.type.helper.carddav" class="com.ettrema.http.carddav.AddressBookResourceTypeHelper">
+		<constructor-arg ref="resource.type.helper.caldav"/>
+	</bean>
+
+
+	<bean id="auth.service" class="com.bradmcevoy.http.AuthenticationService"/>
+<!--
+    <bean id="response.handler" class="com.bradmcevoy.http.MsOfficeResponseHandler"/>
+-->
+
+	<bean id="handler.helper" class="com.bradmcevoy.http.HandlerHelper">
+		<constructor-arg ref="auth.service"/>
+		<constructor-arg>
+			<list>
+                <!-- Storage quota checkers-->
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="response.handler" class="com.bradmcevoy.http.webdav.DefaultWebDavResponseHandler">
+		<constructor-arg ref="auth.service"/>
+		<constructor-arg ref="resource.type.helper.carddav"/>
+	</bean>
+
+	<bean id="protocol.http11" class="com.bradmcevoy.http.http11.Http11Protocol">
+		<constructor-arg ref="response.handler"/>
+		<constructor-arg ref="handler.helper"/>
+	</bean>
+
+	<bean id="protocol.webdav" class="com.bradmcevoy.http.webdav.WebDavProtocol">
+		<constructor-arg ref="response.handler"/>
+		<constructor-arg ref="handler.helper"/>
+		<constructor-arg ref="resource.type.helper.carddav"/>
+	</bean>
+
+	<bean id="protocol.caldav" class="com.ettrema.http.caldav.CalDavProtocol">
+		<constructor-arg ref="caldav.demo.resource.factory" />
+		<constructor-arg ref="response.handler"/>
+		<constructor-arg ref="handler.helper"/>
+		<constructor-arg ref="protocol.webdav"/>
+	</bean>
+
+	<bean id="protocol.carddav" class="com.ettrema.http.carddav.CardDavProtocol">
+		<constructor-arg ref="caldav.demo.resource.factory" />
+		<constructor-arg ref="response.handler"/>
+		<constructor-arg ref="handler.helper"/>
+		<constructor-arg ref="protocol.webdav"/>
+	</bean>
+
+	<bean id="protocol.acl" class="com.ettrema.http.acl.ACLProtocol">
+		<constructor-arg ref="protocol.webdav"/>
+	</bean>
+
+	<bean id="protocol.handlers" class="com.bradmcevoy.http.ProtocolHandlers">
+		<constructor-arg>
+			<list>
+				<ref bean="protocol.http11"/>
+				<ref bean="protocol.webdav"/>
+				<ref bean="protocol.caldav"/>
+				<ref bean="protocol.acl"/>
+				<ref bean="protocol.carddav"/>				
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="http.manager" class="com.bradmcevoy.http.HttpManager">
+		<constructor-arg ref="wellknown.resource.factory" />
+		<constructor-arg ref="response.handler" />
+		<constructor-arg ref="protocol.handlers" />
+
+		<property name="filters">
+			<list>
+				<ref bean="debug.filter" />
+			</list>
+		</property>
+
+	</bean>
+
+    <!-- If added to the http manager, this filter will output request and responses
+    to the logger -->
+	<bean id="debug.filter" class="com.bradmcevoy.http.DebugFilter" >
+        <!-- By default the debugfilter will log to the current user's home directory -->
+        <!-- To change this behaviour uncomment the following line and set the path you want to log to-->
+<!--
+        <constructor-arg value="g:\\temp"/>
+-->
+	</bean>
+
+
+    <!-- EMAIL SERVER IMPLEMENTATION -->
+
+    <!-- Client configuration
+        This doesnt use standard ports to avoid permissions problems on linux
+        POP: 1110
+        MTA: 5587 (for sending SMTP from client apps)
+        SMTP: 2525 (for receiving SMTP from other mail servers)
+    -->
+
+    <!-- The CalDAV demo includes an integrated mail server from the geroa.ettrema.com project
+         This isnt necessary for caldav support (and milton caldav does not depend on it) but is
+         convenient for demonstrating caldav and email integration
+    -->
+	<bean id="mailResourceFactory" class="com.ettrema.http.caldav.demo.TMailResourceFactory">
+		<constructor-arg ref="caldav.demo.resource.factory" />
+	</bean>
+
+
+	<bean id="popServer" class="com.ettrema.mail.pop.MinaPopServer">
+		<constructor-arg value="1110" /> <!-- run on high port so no problems on linux - should be 25 -->
+		<constructor-arg ref="mailResourceFactory" />
+		<constructor-arg >
+			<list />
+		</constructor-arg>
+	</bean>
+
+	<bean id="mailSender" class="com.ettrema.mail.send.AspirinMailSender" />
+
+	<bean id="smtpServer" class="com.ettrema.mail.receive.SubethaSmtpServer" >
+		<constructor-arg value="2525" /> <!-- run on high port so no problems on linux - should be 25 -->
+		<constructor-arg value="false" /> <!-- do not enable SSL -->
+		<constructor-arg ref="mailResourceFactory" />
+		<constructor-arg > <!-- no filters -->
+			<list />
+		</constructor-arg>
+	</bean>
+
+    <!-- The Mail Submission Agent. Runs on port 587-->
+	<bean id="msaSmtpServer" class="com.ettrema.mail.receive.AuthenticatedSmtpServer" >
+		<constructor-arg value="5587" /> <!-- run on high port so no problems on linux - should be 587 -->
+		<constructor-arg value="false" /> <!-- do not enable SSL -->
+		<constructor-arg ref="mailResourceFactory" />
+		<constructor-arg ref="mailSender" />
+		<constructor-arg >
+			<list />
+		</constructor-arg>
+	</bean>
+
+	<bean id="mailServer" class="com.ettrema.mail.MailServer" init-method="start">
+		<constructor-arg ref="mailSender" />
+		<constructor-arg ref="smtpServer" />
+		<constructor-arg ref="popServer" />
+		<constructor-arg ref="msaSmtpServer" />
+	</bean>
+	
+	<!-- And now for LDAP... -->
+	
+	<bean id="ldap.user.factory" class="com.ettrema.http.caldav.demo.TLdapUserFactory">
+		<constructor-arg ref="caldav.demo.resource.factory" />
+	</bean>
+	
+	<bean id="ldap.server" class="com.ettrema.ldap.LdapServer" init-method="start" destroy-method="close">
+		<constructor-arg ref="ldap.user.factory" />
+		<constructor-arg ref="protocol.webdav" />
+		<property name="port" value="8389" />
+		<!--
+		<property name="bindAddress" value="localhost" />
+		-->
+		<property name="nosslFlag" value="true"/>
+	</bean>
+	
+</beans>

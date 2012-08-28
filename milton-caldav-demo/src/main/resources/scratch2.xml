@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<D:multistatus xmlns:ns1="http://calendarserver.org/ns/" xmlns:D="DAV:" xmlns:ns2="urn:ietf:params:xml:ns:caldav">
+    <D:response>
+        <D:href>/users/userA/calendars/</D:href>
+        <D:propstat>
+            <D:prop>
+                <ns1:getctag>1944239527</ns1:getctag>
+                <ns2:calendar-description/>
+                <D:resourcetype>
+                    <D:collection/>
+                </D:resourcetype>
+                <D:displayname>calendars</D:displayname>
+            </D:prop>
+            <D:status>HTTP/1.1 200</D:status>
+        </D:propstat>
+        <D:propstat>
+            <D:prop>
+                <calendar-color/>
+                <calendar-order/>
+                <ns2:calendar-free-busy-set/>
+            </D:prop>
+            <D:status>HTTP/1.1 404</D:status>
+        </D:propstat>
+    </D:response>
+    <D:response>
+        <D:href>/users/userA/calendars/cal1/</D:href>
+        <D:propstat>
+            <D:prop>
+                <ns1:getctag>4500574</ns1:getctag>
+                <ns2:calendar-description><![CDATA[A test calendar]]>
+                </ns2:calendar-description>
+                <D:resourcetype>
+                    <D:collection/>
+                    <ns2:calendar/>
+                </D:resourcetype>
+                <D:displayname>cal1</D:displayname>
+            </D:prop>
+            <D:status>HTTP/1.1 200</D:status>
+        </D:propstat>
+        <D:propstat>
+            <D:prop>
+                <calendar-color/>
+                <calendar-order/>
+                <ns2:calendar-free-busy-set/>
+            </D:prop>
+            <D:status>HTTP/1.1 404</D:status>
+        </D:propstat>
+    </D:response>
+    <D:response>
+        <D:href>/users/userA/calendars/inbox/</D:href>
+        <D:propstat>
+            <D:prop>
+                <ns1:getctag>1179687161</ns1:getctag>
+                <ns2:calendar-description/>
+                <D:resourcetype>
+                    <D:collection/>
+                </D:resourcetype>
+                <D:displayname>inbox</D:displayname>
+            </D:prop>
+            <D:status>HTTP/1.1 200</D:status>
+        </D:propstat>
+        <D:propstat>
+            <D:prop>
+                <calendar-color/>
+                <calendar-order/>
+                <ns2:calendar-free-busy-set/>
+            </D:prop>
+            <D:status>HTTP/1.1 404</D:status>
+        </D:propstat>
+    </D:response>
+    <D:response>
+        <D:href>/users/userA/calendars/outbox/</D:href>
+        <D:propstat>
+            <D:prop>
+                <ns1:getctag>1433085823</ns1:getctag>
+                <ns2:calendar-description/>
+                <D:resourcetype>
+                    <D:collection/>
+                </D:resourcetype>
+                <D:displayname>outbox</D:displayname>
+            </D:prop>
+            <D:status>HTTP/1.1 200</D:status>
+        </D:propstat>
+        <D:propstat>
+            <D:prop>
+                <calendar-color/>
+                <calendar-order/>
+                <ns2:calendar-free-busy-set/>
+            </D:prop>
+            <D:status>HTTP/1.1 404</D:status>
+        </D:propstat>
+    </D:response>
+</D:multistatus>
