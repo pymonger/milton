@@ -28,7 +28,7 @@
         <property name="contextPath" value="webdav-fs"/>
         <!-- the default root is System property user.home  -->
         <!-- enable the property below to set the root elsewhere -->
-        <!--<property name="root" value="/data/public" />-->
+        <!--<property name="root" value="/data/public_fuse" />-->
         <property name="root" value="/data/public_fuse" />
     </bean>
 
